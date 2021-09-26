@@ -75,7 +75,7 @@ class CLI:
         tokens.append(command_name)
         i += 1
         if command_name == "CREATE":
-            if re.match(CLI.NAMES, parts[i]) and not parts[i] in CLI.SPECIAL_WORDS:
+            if re.match(CLI.NAMES, parts[i]) and not parts[i].upper() in CLI.SPECIAL_WORDS:
                 tokens.append(parts[i])
                 i += 1
             else:
@@ -86,14 +86,14 @@ class CLI:
                     if ch in parts[i]:
                         parts[i] = parts[i].replace(ch, '')
                 if re.match(CLI.NAMES, parts[i]):
-                    if parts[i] in CLI.SPECIAL_WORDS:
+                    if parts[i].upper() in CLI.SPECIAL_WORDS:
                         raise Exception("INDEXED before column name")
                     if i + 1 < len(parts):
                         next_word = parts[i + 1]
                         for ch in ['(', ')', ',', ';', '.']:
                             if ch in next_word:
                                 next_word = next_word.replace(ch, '')
-                        is_indexed = next_word in CLI.SPECIAL_WORDS
+                        is_indexed = next_word.upper() == "INDEXED"
                     else:
                         is_indexed = False
                     columns.append([parts[i], is_indexed])
@@ -101,9 +101,9 @@ class CLI:
                 i += 1
             tokens.append(columns)
         elif command_name == "INSERT":
-            if i < len(parts) and parts[i] in CLI.SPECIAL_WORDS:
+            if i < len(parts) and parts[i].upper() in CLI.SPECIAL_WORDS:
                 i += 1
-            if i < len(parts) and re.match(CLI.NAMES, parts[i]):
+            if i < len(parts) and re.match(CLI.NAMES, parts[i]) and not parts[i].upper() in CLI.SPECIAL_WORDS:
                 tokens.append(parts[i])
                 i += 1
             else:
@@ -119,12 +119,14 @@ class CLI:
             tokens.append(values)
         elif command_name == "SELECT":
             columns = []
-            while i < len(parts) and parts[i] != "FROM":
-                if "COUNT" in parts[i] or "COUNT_DISTINCT" in parts[i] or "MAX" in parts[i] or "AVG" in parts[i]:
+            while i < len(parts) and parts[i].upper() != "FROM":
+                upartsi = parts[i].upper()
+                if "COUNT" in upartsi or "COUNT_DISTINCT" in upartsi or "MAX" in upartsi or "AVG" in upartsi:
                     for ch in [',', ';', '.']:
                         if ch in parts[i]:
                             parts[i] = parts[i].replace(ch, '')
-                    columns.append(parts[i])
+                    end_sw_index = parts[i].index('(')
+                    columns.append(parts[i][:end_sw_index].upper() + parts[i][end_sw_index:])
                     i += 1
                 else:
                     for ch in ['(', ')', ',', ';', '.']:
@@ -133,14 +135,14 @@ class CLI:
                     if parts[i] == '*':
                         columns = []
                         i += 1
-                    elif re.match(CLI.NAMES, parts[i]) and parts[i] not in CLI.SPECIAL_WORDS:
+                    elif re.match(CLI.NAMES, parts[i]) and parts[i].upper() not in CLI.SPECIAL_WORDS:
                         columns.append(parts[i])
                         i += 1
                     else:
                         raise Exception("invalid column name")
-            if i < len(parts) and parts[i] == "FROM":
+            if i < len(parts) and parts[i].upper() == "FROM":
                 i += 1
-            if i < len(parts) and re.match(CLI.NAMES, parts[i]):
+            if i < len(parts) and re.match(CLI.NAMES, parts[i]) and not parts[i].upper() in CLI.SPECIAL_WORDS:
                 for ch in ['(', ')', ',', ';', '.']:
                     if ch in parts[i]:
                         parts[i] = parts[i].replace(ch, '')
@@ -150,7 +152,7 @@ class CLI:
             else:
                 raise Exception("invalid table name")
             condition = []
-            if i < len(parts) and parts[i] == "WHERE":
+            if i < len(parts) and parts[i].upper() == "WHERE":
                 i += 1
                 while i < len(parts) and len(condition) < 3:
                     for ch in ['(', ')', ',', ';', '.']:
@@ -159,28 +161,28 @@ class CLI:
                     if parts[i].isnumeric():
                         condition.append(int(parts[i]))
                     else:
-                        if parts[i] in CLI.SPECIAL_WORDS:
+                        if parts[i].upper() in CLI.SPECIAL_WORDS:
                             raise Exception("invalid column name in WHERE")
                         condition.append(parts[i])
                     i += 1
             tokens.append(condition)
             group_columns = []
-            if i < len(parts) and parts[i] == "GROUP_BY":
+            if i < len(parts) and parts[i].upper() == "GROUP_BY":
                 i += 1
                 while i < len(parts):
                     for ch in ['(', ')', ',', ';', '.']:
                         if ch in parts[i]:
                             parts[i] = parts[i].replace(ch, '')
-                    if re.match(CLI.NAMES, parts[i]) and not parts[i] in CLI.SPECIAL_WORDS:
+                    if re.match(CLI.NAMES, parts[i]) and not parts[i].upper() in CLI.SPECIAL_WORDS:
                         group_columns.append(parts[i])
                         i += 1
                     else:
                         raise Exception("invalid group column name")
             tokens.append(group_columns)
         elif command_name == "DELETE":
-            if i < len(parts) and parts[i] in CLI.SPECIAL_WORDS:
+            if i < len(parts) and parts[i].upper() in CLI.SPECIAL_WORDS:
                 i += 1
-            if i < len(parts) and re.match(CLI.NAMES, parts[i]):
+            if i < len(parts) and re.match(CLI.NAMES, parts[i]) and not parts[i].upper() in CLI.SPECIAL_WORDS:
                 for ch in ['(', ')', ',', ';', '.']:
                     if ch in parts[i]:
                         parts[i] = parts[i].replace(ch, '')
@@ -188,7 +190,7 @@ class CLI:
                 i += 1
             else:
                 raise Exception("invalid table name")
-            if i < len(parts) and parts[i] in CLI.SPECIAL_WORDS:
+            if i < len(parts) and parts[i].upper() in CLI.SPECIAL_WORDS:
                 i += 1
             condition = []
             while i < len(parts):
@@ -198,7 +200,7 @@ class CLI:
                 if parts[i].isnumeric():
                     condition.append(int(parts[i]))
                 else:
-                    if parts[i] in CLI.SPECIAL_WORDS:
+                    if parts[i].upper() in CLI.SPECIAL_WORDS:
                         raise Exception("invalid column name in WHERE")
                     condition.append(parts[i])
                 i += 1
@@ -207,4 +209,4 @@ class CLI:
 
 
 if __name__ == "__main__":
-    print(CLI.parse_command("SELECT * FROM measurements;"))
+    client = CLI(run=True)
