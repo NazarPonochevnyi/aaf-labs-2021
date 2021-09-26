@@ -10,7 +10,7 @@ from engine.database import DB
 class CLI:
     NAMES = r"[a-zA-Z][a-zA-Z0-9_]*"
     COMMANDS = {"CREATE", "INSERT", "SELECT", "DELETE"}
-    SPECIAL_WORDS = {"INDEXED", "INTO", "FROM", "WHERE"}
+    SPECIAL_WORDS = {"INDEXED", "INTO", "FROM", "WHERE", "GROUP_BY"}
 
     def __init__(self, **params):
         """
@@ -118,7 +118,65 @@ class CLI:
                 i += 1
             tokens.append(values)
         elif command_name == "SELECT":
-            pass
+            columns = []
+            while i < len(parts) and parts[i] != "FROM":
+                if "COUNT" in parts[i] or "COUNT_DISTINCT" in parts[i] or "MAX" in parts[i] or "AVG" in parts[i]:
+                    for ch in [',', ';', '.']:
+                        if ch in parts[i]:
+                            parts[i] = parts[i].replace(ch, '')
+                    columns.append(parts[i])
+                    i += 1
+                else:
+                    for ch in ['(', ')', ',', ';', '.']:
+                        if ch in parts[i]:
+                            parts[i] = parts[i].replace(ch, '')
+                    if parts[i] == '*':
+                        columns = []
+                        i += 1
+                    elif re.match(CLI.NAMES, parts[i]) and parts[i] not in CLI.SPECIAL_WORDS:
+                        columns.append(parts[i])
+                        i += 1
+                    else:
+                        raise Exception("invalid column name")
+            if i < len(parts) and parts[i] == "FROM":
+                i += 1
+            if i < len(parts) and re.match(CLI.NAMES, parts[i]):
+                for ch in ['(', ')', ',', ';', '.']:
+                    if ch in parts[i]:
+                        parts[i] = parts[i].replace(ch, '')
+                tokens.append(parts[i])
+                tokens.append(columns)
+                i += 1
+            else:
+                raise Exception("invalid table name")
+            condition = []
+            if i < len(parts) and parts[i] == "WHERE":
+                i += 1
+                while i < len(parts) and len(condition) < 3:
+                    for ch in ['(', ')', ',', ';', '.']:
+                        if ch in parts[i]:
+                            parts[i] = parts[i].replace(ch, '')
+                    if parts[i].isnumeric():
+                        condition.append(int(parts[i]))
+                    else:
+                        if parts[i] in CLI.SPECIAL_WORDS:
+                            raise Exception("invalid column name in WHERE")
+                        condition.append(parts[i])
+                    i += 1
+            tokens.append(condition)
+            group_columns = []
+            if i < len(parts) and parts[i] == "GROUP_BY":
+                i += 1
+                while i < len(parts):
+                    for ch in ['(', ')', ',', ';', '.']:
+                        if ch in parts[i]:
+                            parts[i] = parts[i].replace(ch, '')
+                    if re.match(CLI.NAMES, parts[i]) and not parts[i] in CLI.SPECIAL_WORDS:
+                        group_columns.append(parts[i])
+                        i += 1
+                    else:
+                        raise Exception("invalid group column name")
+            tokens.append(group_columns)
         elif command_name == "DELETE":
             if i < len(parts) and parts[i] in CLI.SPECIAL_WORDS:
                 i += 1
@@ -149,9 +207,4 @@ class CLI:
 
 
 if __name__ == "__main__":
-    c = \
-    """
-        DELETE measurements WHERE id != 2;
-
-    """
-    print(CLI.parse_command(c))
+    print(CLI.parse_command("SELECT * FROM measurements;"))
