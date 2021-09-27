@@ -12,6 +12,12 @@ def test_parse_create():
                                                                                                          True],
                                                                                                         ["weight",
                                                                                                          False]]]
+    assert CLI.parse_command("create measurements (id indexed,height,weight") == ["CREATE", "measurements",
+                                                                                                       [["id", True],
+                                                                                                        ["height",
+                                                                                                         False],
+                                                                                                        ["weight",
+                                                                                                         False]]]
 
 
 def test_parse_insert():
@@ -41,3 +47,4 @@ def test_parse_delete():
     assert CLI.parse_command("DELETE measurements WHERE height >= 190;") == ["DELETE", "measurements",
                                                                              ["height", ">=", 190]]
     assert CLI.parse_command("DELETE measurements WHERE id != 2;") == ["DELETE", "measurements", ["id", "!=", 2]]
+    assert CLI.parse_command("delete measurements where x=1") == ["DELETE", "measurements", ["x", "=", 1]]

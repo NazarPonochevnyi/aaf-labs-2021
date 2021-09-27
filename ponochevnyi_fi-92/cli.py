@@ -5,12 +5,22 @@ Command Line Interface to work with SQL database
 
 import re
 from engine.database import DB
+import operator
 
 
 class CLI:
     NAMES = r"[a-zA-Z][a-zA-Z0-9_]*"
     COMMANDS = {"CREATE", "INSERT", "SELECT", "DELETE"}
     SPECIAL_WORDS = {"INDEXED", "INTO", "FROM", "WHERE", "GROUP_BY"}
+    OPERATORS = {
+        "<": operator.lt,
+        "<=": operator.le,
+        "=": operator.eq,
+        "!=": operator.ne,
+        ">": operator.gt,
+        ">=": operator.ge
+    }
+    LIST_OPERATORS = list(OPERATORS.keys())
 
     def __init__(self, **params):
         """
@@ -66,6 +76,16 @@ class CLI:
         tokens: list
         """
         parts = command.split()
+        parts = list(filter(lambda x: x != '', sum([part.split(',') for part in parts], [])))
+        for i, part in enumerate(parts):
+            if part not in CLI.LIST_OPERATORS:
+                check_list = [oper in part for oper in CLI.LIST_OPERATORS]
+                if any(check_list):
+                    oper = CLI.LIST_OPERATORS[check_list.index(True)]
+                    insert_part = part.split(oper)
+                    insert_part.insert(1, oper)
+                    parts = parts[:i] + insert_part + parts[i + 1:]
+                    break
         tokens, i = [], 0
         while i < len(parts) and parts[i].upper() not in CLI.COMMANDS:
             i += 1
