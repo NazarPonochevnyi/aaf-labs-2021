@@ -17,6 +17,12 @@ class Table:
         ">": operator.gt,
         ">=": operator.ge
     }
+    AGGREGATIONS = {
+        "COUNT": lambda column: len(column),
+        "COUNT_DISTINCT": lambda column: len(set(column)),
+        "MAX": lambda column: max(column),
+        "AVG": lambda column: sum(column) / len(column)
+    }
 
     def __init__(self, name: str, columns: list[list[str, bool]]):
         self.name = name
@@ -39,7 +45,15 @@ class Table:
     def select(self, columns: list[str], condition: list[str], group_columns: list[str]) -> str:
         if not columns:
             columns = self.columns
-        columns_ids = [self.columns[column] for column in columns]
+        columns_map = []
+        for column in columns:
+            possible_agg_name = column.split('(')[0]
+            if possible_agg_name in Table.AGGREGATIONS:
+                column_name = column[column.index('(') + 1: column.index(')')]
+                columns_map.append([Table.AGGREGATIONS[possible_agg_name], self.columns[column_name]])
+            else:
+                columns_map.append([None, self.columns[column]])
+        aggregation_lists = {}
         use_where = len(condition) == 3 and condition[1] in Table.OPERATORS.keys()
         data = [columns]
         for row in self.table:
@@ -51,8 +65,22 @@ class Table:
                     op2 = row[self.columns[op2]]
                 if not Table.OPERATORS[oper](op1, op2):
                     continue
-            response_row = [row[i] for i in columns_ids]
+            response_row = []
+            for i, (agg_func, col_id) in enumerate(columns_map):
+                if agg_func is not None:
+                    aggregation_lists.setdefault(i, []).append(row[col_id])
+                response_row.append(row[col_id])
             data.append(response_row)
+        if aggregation_lists:
+            for i, (agg_func, col_id) in enumerate(columns_map):
+                if agg_func is not None:
+                    aggregation_lists[i] = agg_func(aggregation_lists[i])
+            start_i = 1 if len(aggregation_lists) < len(columns) else -1
+            for row in data[start_i:]:
+                for agg_col_id in aggregation_lists:
+                    row[agg_col_id] = aggregation_lists[agg_col_id]
+            if len(aggregation_lists) == len(columns):
+                data = [data[0], data[-1]]
         pr_table = AsciiTable(data)
         return pr_table.table
 
@@ -75,4 +103,8 @@ class Table:
 
 
 if __name__ == "__main__":
-    table = Table("coordinates", [["x", False], ["y", False]])
+    table = Table("coordinates", [["x", False], ["y", True]])
+    table.insert([1, 2])
+    table.insert([5, 4])
+    table.insert([5, 6])
+    print(table.select(["AVG(x)", "MAX(x)", "COUNT(x)", "COUNT_DISTINCT(x)"], [], []))
