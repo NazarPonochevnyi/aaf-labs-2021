@@ -26,6 +26,14 @@ def test_table_select():
     table.insert([3, 4])
     table.insert([5, 6])
     assert table.select([], [], []) == "+---+---+\n| x | y |\n+---+---+\n| 1 | 2 |\n| 3 | 4 |\n| 5 | 6 |\n+---+---+"
+    table = Table("coordinates", [["x", False], ["y", True], ["color", False], ["type", False]])
+    table.insert([1, 2, "red", "point"])
+    table.insert([5, 4, "blue", "point"])
+    table.insert([5, 6, "blue", "line"])
+    table.insert([7, 6, "red", "line"])
+    table.insert([3, 4, "red", "point"])
+    table.insert([2, 9, "yellow", "point"])
+    assert table.select(["type", "MAX(y)", "COUNT_DISTINCT(x)"], ["color", "!=", "yellow"], ["type"]) == "+-------+--------+-------------------+\n| type  | MAX(y) | COUNT_DISTINCT(x) |\n+-------+--------+-------------------+\n| point | 4      | 3                 |\n| line  | 6      | 2                 |\n+-------+--------+-------------------+"
 
 
 def test_table_delete():

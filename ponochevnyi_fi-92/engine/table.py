@@ -56,6 +56,8 @@ class Table:
         aggregation_lists = {}
         use_where = len(condition) == 3 and condition[1] in Table.OPERATORS.keys()
         data = [columns]
+        groups_map = [self.columns[column] for column in group_columns]
+        groups = {}
         for row in self.table:
             if use_where:
                 op1, oper, op2 = condition
@@ -66,21 +68,35 @@ class Table:
                 if not Table.OPERATORS[oper](op1, op2):
                     continue
             response_row = []
+            group_key = tuple(row[col_id] for col_id in groups_map)
             for i, (agg_func, col_id) in enumerate(columns_map):
                 if agg_func is not None:
-                    aggregation_lists.setdefault(i, []).append(row[col_id])
+                    if group_key:
+                        aggregation_lists.setdefault(group_key, {}).setdefault(i, []).append(row[col_id])
+                    else:
+                        aggregation_lists.setdefault(i, []).append(row[col_id])
                 response_row.append(row[col_id])
-            data.append(response_row)
-        if aggregation_lists:
-            for i, (agg_func, col_id) in enumerate(columns_map):
-                if agg_func is not None:
-                    aggregation_lists[i] = agg_func(aggregation_lists[i])
-            start_i = 1 if len(aggregation_lists) < len(columns) else -1
-            for row in data[start_i:]:
-                for agg_col_id in aggregation_lists:
-                    row[agg_col_id] = aggregation_lists[agg_col_id]
-            if len(aggregation_lists) == len(columns):
-                data = [data[0], data[-1]]
+            if group_key:
+                groups[group_key] = response_row
+            else:
+                data.append(response_row)
+        if group_columns:
+            for group_key in groups:
+                for i, (agg_func, col_id) in enumerate(columns_map):
+                    if agg_func is not None:
+                        groups[group_key][i] = agg_func(aggregation_lists[group_key][i])
+            data += list(groups.values())
+        else:
+            if aggregation_lists:
+                for i, (agg_func, col_id) in enumerate(columns_map):
+                    if agg_func is not None:
+                        aggregation_lists[i] = agg_func(aggregation_lists[i])
+                start_i = 1 if len(aggregation_lists) < len(columns) else -1
+                for row in data[start_i:]:
+                    for agg_col_id in aggregation_lists:
+                        row[agg_col_id] = aggregation_lists[agg_col_id]
+                if len(aggregation_lists) == len(columns):
+                    data = [data[0], data[-1]]
         pr_table = AsciiTable(data)
         return pr_table.table
 
@@ -103,8 +119,13 @@ class Table:
 
 
 if __name__ == "__main__":
-    table = Table("coordinates", [["x", False], ["y", True]])
-    table.insert([1, 2])
-    table.insert([5, 4])
-    table.insert([5, 6])
-    print(table.select(["AVG(x)", "MAX(x)", "COUNT(x)", "COUNT_DISTINCT(x)"], [], []))
+    table = Table("coordinates", [["x", False], ["y", True], ["color", False], ["type", False]])
+    table.insert([1, 2, "red", "point"])
+    table.insert([5, 4, "blue", "point"])
+    table.insert([5, 6, "blue", "line"])
+    table.insert([7, 6, "red", "line"])
+    table.insert([3, 4, "red", "point"])
+    table.insert([2, 9, "yellow", "point"])
+    print(table.select(["type", "MAX(y)", "COUNT_DISTINCT(x)"], ["color", "!=", "yellow"], ["type"]))
+    table.delete(["x", "<=", "y"])
+    print(table.select([], [], []))
