@@ -38,8 +38,10 @@ class DB:
         """
         if table_name in self.tables:
             if DB.check_int_list(values):
-                inserted_rows = self.tables[table_name].insert(values)
-                return f"{len(inserted_rows)} row(s) has been inserted into '{table_name}'"
+                if len(values) == len(self.tables[table_name].columns):
+                    inserted_rows = self.tables[table_name].insert(values)
+                    return f"{len(inserted_rows)} row(s) has been inserted into '{table_name}'"
+                return "invalid amount of values to insert"
             return "invalid values to insert"
         return f"'{table_name}' table not found"
 
