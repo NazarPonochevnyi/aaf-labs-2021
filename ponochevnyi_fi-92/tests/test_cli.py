@@ -48,3 +48,11 @@ def test_parse_delete():
                                                                              ["height", ">=", 190]]
     assert CLI.parse_command("DELETE measurements WHERE id != 2;") == ["DELETE", "measurements", ["id", "!=", 2]]
     assert CLI.parse_command("delete measurements where x=1") == ["DELETE", "measurements", ["x", "=", 1]]
+
+
+def test_db_query():
+    client = CLI()
+    assert client.query("Create temp (x,y);") == "Table 'temp' has been created"
+    assert client.query("INSERT INTO temp (1, 2);") == "1 row(s) has been inserted into 'temp'"
+    assert client.query("select * froM temp where x=1;") == "+---+---+\n| x | y |\n+---+---+\n| 1 | 2 |\n+---+---+"
+    assert client.query("delete from temp;") == "1 row(s) have been deleted from the 'temp' table"
