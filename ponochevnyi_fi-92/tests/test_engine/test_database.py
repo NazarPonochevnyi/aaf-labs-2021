@@ -27,5 +27,15 @@ def test_db_table_select():
 
 
 def test_db_table_delete():
-    # TODO: delete tests
-    pass
+    db = DB()
+    db.create("coordinates", [["x", False], ["y", True]])
+    db.insert("coordinates", [8, 3])
+    db.insert("coordinates", [9, 1])
+    db.insert("coordinates", [4, 6])
+    assert db.delete("none", []) == "'none' table not found"
+    assert db.delete("coordinates", [1]) == "invalid condition to delete"
+    assert db.delete("coordinates", [1, "&", 0]) == "invalid condition to delete"
+    assert db.delete("coordinates", [8, "<=", "z"]) == "invalid condition to delete"
+    assert db.delete("coordinates", [(1, 2), "<=", "y"]) == "invalid condition to delete"
+    assert db.delete("coordinates", ["x", ">=", 8]) == "2 row(s) have been deleted from the 'coordinates' table"
+    assert db.delete("coordinates", []) == "1 row(s) have been deleted from the 'coordinates' table"
