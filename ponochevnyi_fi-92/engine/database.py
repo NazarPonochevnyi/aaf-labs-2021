@@ -14,6 +14,27 @@ class DB:
                 return False
         return True
 
+    def check_columns(self, table_name: str, columns: list[str]) -> bool:
+        for column in columns:
+            if column not in self.tables[table_name].columns:
+                return False
+        return True
+
+    def check_columns_with_aggs_and_groups(self, table_name: str, columns: list[str], group_columns: list[str]) -> bool:
+        if group_columns and not columns:
+            return False
+        for column in columns:
+            possible_agg_name = column.split('(')[0]
+            if possible_agg_name in Table.AGGREGATIONS:
+                column_name = column[column.index('(') + 1: column.index(')')]
+            else:
+                column_name = column
+                if group_columns and column_name not in group_columns:
+                    return False
+            if column_name not in self.tables[table_name].columns:
+                return False
+        return True
+
     def check_condition(self, table_name: str, condition: list) -> bool:
         if condition:
             if len(condition) != 3:
@@ -70,8 +91,14 @@ class DB:
         :return:
         """
         if table_name in self.tables:
-            selection = self.tables[table_name].select(columns, condition, group_columns)
-            return selection
+            if self.check_columns(table_name, group_columns):
+                if self.check_condition(table_name, condition):
+                    if self.check_columns_with_aggs_and_groups(table_name, columns, group_columns):
+                        selection = self.tables[table_name].select(columns, condition, group_columns)
+                        return selection
+                    return "invalid columns or aggregations to select"
+                return "invalid condition to select"
+            return "invalid group columns to group by"
         return f"'{table_name}' table not found"
 
     def delete(self, table_name: str, condition: list) -> str:

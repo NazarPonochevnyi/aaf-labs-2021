@@ -22,8 +22,21 @@ def test_db_table_insert():
 
 
 def test_db_table_select():
-    # TODO: select tests
-    pass
+    db = DB()
+    db.create("measurements", [["id", True], ["height", False], ["weight", False]])
+    db.insert("measurements", [1, 3, 7])
+    db.insert("measurements", [1, 5, 4])
+    db.insert("measurements", [1, 4, 9])
+    db.insert("measurements", [2, 6, 4])
+    db.insert("measurements", [2, 2, 8])
+    assert db.select("measurements", [], [], ["height"]) == "invalid columns or aggregations to select"
+    assert db.select("measurements", ["volume"], [], []) == "invalid columns or aggregations to select"
+    assert db.select("measurements", ["MIN(height)"], [], []) == "invalid columns or aggregations to select"
+    assert db.select("measurements", ["AVG(height)", "weight", "id"], [], ["id"]) == "invalid columns or aggregations to select"
+    assert db.select("measurements", [], [0, "^", 1], []) == "invalid condition to select"
+    assert db.select("measurements", ["AVG(height)"], [], ["volume"]) == "invalid group columns to group by"
+    assert db.select("measurements", [], [], []) == "+----+--------+--------+\n| id | height | weight |\n+----+--------+--------+\n| 1  | 3      | 7      |\n| 1  | 5      | 4      |\n| 1  | 4      | 9      |\n| 2  | 6      | 4      |\n| 2  | 2      | 8      |\n+----+--------+--------+"
+    assert db.select("measurements", ["MAX(height)", "MAX(weight)", "id"], ["weight", "<=", 8], ["id"]) == "+-------------+-------------+----+\n| MAX(height) | MAX(weight) | id |\n+-------------+-------------+----+\n| 5           | 7           | 1  |\n| 6           | 8           | 2  |\n+-------------+-------------+----+"
 
 
 def test_db_table_delete():
