@@ -33,8 +33,13 @@ def test_table_select():
     table.insert([7, 6, "red", "line"])
     table.insert([3, 4, "red", "point"])
     table.insert([2, 9, "yellow", "point"])
-    assert table.select(["type", "MAX(y)", "COUNT_DISTINCT(x)"], ["color", "!=", "yellow"], ["type"]) == "+-------+--------+-------------------+\n| type  | MAX(y) | COUNT_DISTINCT(x) |\n+-------+--------+-------------------+\n| point | 4      | 3                 |\n| line  | 6      | 2                 |\n+-------+--------+-------------------+"
-
+    assert table.select(["x", "y"], ["yellow", "=", "color"], []) == "+---+---+\n| x | y |\n+---+---+\n| 2 | 9 |\n+---+---+"
+    assert table.select(["MAX(x)", "MAX(y)"], [], []) == "+--------+--------+\n| MAX(x) | MAX(y) |\n+--------+--------+\n| 7      | 9      |\n+--------+--------+"
+    assert table.select(["x", "y", "AVG(x)"], ["type", "=", "point"], []) == "+---+---+--------+\n| x | y | AVG(x) |\n+---+---+--------+\n| 1 | 2 | 2.75   |\n| 5 | 4 | 2.75   |\n| 3 | 4 | 2.75   |\n| 2 | 9 | 2.75   |\n+---+---+--------+"
+    assert table.select(["color", "x", "y", "COUNT(type)"], [], ["color"]) == "+--------+---+---+-------------+\n| color  | x | y | COUNT(type) |\n+--------+---+---+-------------+\n| blue   | 5 | 6 | 2           |\n| red    | 3 | 4 | 3           |\n| yellow | 2 | 9 | 1           |\n+--------+---+---+-------------+"
+    assert table.select(["type", "COUNT_DISTINCT(y)", "COUNT(y)"], [], ["type"]) == "+-------+-------------------+----------+\n| type  | COUNT_DISTINCT(y) | COUNT(y) |\n+-------+-------------------+----------+\n| line  | 1                 | 2        |\n| point | 3                 | 4        |\n+-------+-------------------+----------+"
+    assert table.select(["type", "MAX(y)", "COUNT_DISTINCT(x)"], ["color", "!=", "yellow"], ["type"]) == "+-------+--------+-------------------+\n| type  | MAX(y) | COUNT_DISTINCT(x) |\n+-------+--------+-------------------+\n| line  | 6      | 2                 |\n| point | 4      | 3                 |\n+-------+--------+-------------------+"
+    assert table.select(["type", "color", "AVG(y)", "COUNT(x)"], [7, ">", "x"], ["type", "color"]) == "+-------+--------+--------+----------+\n| type  | color  | AVG(y) | COUNT(x) |\n+-------+--------+--------+----------+\n| line  | blue   | 6.0    | 1        |\n| point | blue   | 4.0    | 1        |\n| point | red    | 3.0    | 2        |\n| point | yellow | 9.0    | 1        |\n+-------+--------+--------+----------+"
 
 def test_table_delete():
     table = Table("coordinates", [["x", False], ["y", True]])

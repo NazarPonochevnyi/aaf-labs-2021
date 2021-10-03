@@ -86,6 +86,7 @@ class Table:
                     if agg_func is not None:
                         groups[group_key][i] = agg_func(aggregation_lists[group_key][i])
             data += list(groups.values())
+            data[1:] = sorted(data[1:], key=lambda row: tuple(row[columns.index(column)] for column in group_columns))
         else:
             if aggregation_lists:
                 for i, (agg_func, col_id) in enumerate(columns_map):
