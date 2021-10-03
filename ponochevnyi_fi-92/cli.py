@@ -22,6 +22,9 @@ class CLI:
     }
     LIST_OPERATORS = list(OPERATORS.keys())
 
+    class GetOutOfLoop(Exception):
+        pass
+
     def __init__(self, **params):
         """
         Initialise CLI
@@ -31,12 +34,25 @@ class CLI:
         """
         self.db = DB()
         if params.get('run'):
-            while True:
-                commands = input("> ")
-                for command in commands.split(';'):
-                    if command:
-                        response = self.query(command)
-                        print(response)
+            print("Welcome to NazarSQL! (use 'EXIT;' command to quit)")
+            input_text = ""
+            try:
+                while True:
+                    input_text += ' ' + input("> ")
+                    if ';' in input_text:
+                        for command in input_text.split(';'):
+                            if command:
+                                command = command.strip()
+                                if command.upper() == "EXIT":
+                                    raise CLI.GetOutOfLoop
+                                try:
+                                    response = self.query(command)
+                                except Exception as e:
+                                    response = "Error: {}".format(str(e))
+                                print(response)
+                                input_text = ""
+            except CLI.GetOutOfLoop:
+                pass
 
     def query(self, command: str) -> str:
         """
