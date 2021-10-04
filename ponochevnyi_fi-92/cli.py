@@ -13,12 +13,12 @@ class CLI:
     COMMANDS = {"CREATE", "INSERT", "SELECT", "DELETE"}
     SPECIAL_WORDS = {"INDEXED", "INTO", "FROM", "WHERE", "GROUP_BY"}
     OPERATORS = {
-        "<": operator.lt,
         "<=": operator.le,
-        "=": operator.eq,
         "!=": operator.ne,
-        ">": operator.gt,
-        ">=": operator.ge
+        ">=": operator.ge,
+        "<": operator.lt,
+        "=": operator.eq,
+        ">": operator.gt
     }
     LIST_OPERATORS = list(OPERATORS.keys())
 
@@ -38,7 +38,7 @@ class CLI:
             input_text = ""
             try:
                 while True:
-                    input_text += ' ' + input("> ")
+                    input_text += ' ' + input("> ").strip()
                     if ';' in input_text:
                         for command in input_text.split(';'):
                             if command:

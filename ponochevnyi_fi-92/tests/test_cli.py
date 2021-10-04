@@ -30,10 +30,10 @@ def test_parse_select():
     assert CLI.parse_command("SELECT height, weight FROM measurements WHERE id = 1;") == ["SELECT", "measurements",
                                                                                           ["height", "weight"],
                                                                                           ["id", "=", 1], []]
-    assert CLI.parse_command("SELECT height, COUNT(id), AVG(weight)\n  FROM measurements\n  GROUP_BY height;") == [
+    assert CLI.parse_command("SELECT height, COUNT(id), aVg(weight)\n  FROM measurements\n  GROUP_BY height;") == [
         "SELECT", "measurements", ["height", "COUNT(id)", "AVG(weight)"], [], ["height"]]
     assert CLI.parse_command(
-        "SELECT weight, COUNT(id)\n  FROM measurements\n  WHERE height >= 170\n  GROUP_BY weight;") == ["SELECT",
+        "SELECT weight, COUNT(id)\n  FROM measurements\n  WHERE height>=170\n  GROUP_BY weight;") == ["SELECT",
                                                                                                         "measurements",
                                                                                                         ["weight",
                                                                                                          "COUNT(id)"],
