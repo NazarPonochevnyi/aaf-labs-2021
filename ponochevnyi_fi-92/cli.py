@@ -47,6 +47,8 @@ class CLI:
                                     raise CLI.GetOutOfLoop
                                 try:
                                     response = self.query(command)
+                                except IndexError:
+                                    response = "Error: invalid command"
                                 except Exception as e:
                                     response = "Error: {}".format(str(e))
                                 print(response)

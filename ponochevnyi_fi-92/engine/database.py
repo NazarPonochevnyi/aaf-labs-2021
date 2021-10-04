@@ -60,8 +60,10 @@ class DB:
         :param columns:
         :return:
         """
-        self.tables[table_name] = Table(table_name, columns)
-        return f"Table '{table_name}' has been created"
+        if columns:
+            self.tables[table_name] = Table(table_name, columns)
+            return f"Table '{table_name}' has been created"
+        return "invalid columns"
 
     def insert(self, table_name: str, values: list[int]) -> str:
         """
