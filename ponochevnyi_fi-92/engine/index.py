@@ -9,7 +9,7 @@ from graphviz import Digraph
 class Index:
     def __init__(self, value=None, pointer=None):
         self.data = value
-        self.pointer = pointer
+        self.pointers = {pointer}
         self.left = None
         self.right = None
 
@@ -51,7 +51,9 @@ class Index:
 
     def insert(self, value: int, pointer: int):
         if self.data:
-            if value < self.data:
+            if value == self.data:
+                self.pointers.add(pointer)
+            elif value < self.data:
                 if self.left is None:
                     self.left = Index(value, pointer)
                 else:
@@ -63,7 +65,7 @@ class Index:
                     self.right.insert(value, pointer)
         else:
             self.data = value
-            self.pointer = pointer
+            self.pointers = {pointer}
 
     def remove(self, value: int):
         if self.data:
@@ -120,31 +122,35 @@ class Index:
         else:
             raise Exception("index (binary tree) is empty")
 
-    def search(self, value: int) -> int:
+    def search(self, value: int) -> set:
         if self.data:
             if value < self.data:
                 if self.left is None:
-                    return 0
+                    return set()
                 return self.left.search(value)
             elif value > self.data:
                 if self.right is None:
-                    return 0
+                    return set()
                 return self.right.search(value)
-            return self.pointer
+            return self.pointers
         else:
             raise Exception("index (binary tree) is empty")
 
-    def min(self):
+    def min(self, with_pointer=False):
         if self.data:
             if self.left is None:
+                if with_pointer:
+                    return self.data, self.pointers
                 return self.data
             return self.left.min()
         else:
             raise Exception("index (binary tree) is empty")
 
-    def max(self):
+    def max(self, with_pointer=False):
         if self.data:
             if self.right is None:
+                if with_pointer:
+                    return self.data, self.pointers
                 return self.data
             return self.right.max()
         else:

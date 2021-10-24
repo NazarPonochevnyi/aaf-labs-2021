@@ -32,14 +32,17 @@ class Table:
         for i, (col_name, with_index) in enumerate(columns):
             self.columns[col_name] = i
             if with_index:
-                self.indexes[col_name] = Index(col_name)
+                self.indexes[col_name] = Index()
 
     def insert(self, values: list[int]) -> list[list[int]]:
         inserted_rows = []
         if len(values) == len(self.columns):
+            row_i = len(self.table)
+            for col_name in self.indexes:
+                i = self.columns[col_name]
+                self.indexes[col_name].insert(values[i], row_i)
             self.table.append(values)
             inserted_rows.append(values)
-            # indexes updates
         return inserted_rows
 
     def select(self, columns: list[str], condition: list[str], group_columns: list[str]) -> str:
