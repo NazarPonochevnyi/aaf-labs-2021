@@ -10,4 +10,4 @@
 * Розробка індексів, `оптимізацій` і тестування (29.11.2021)
 
 ### Інтерактивне демо
-За <a href="https://colab.research.google.com/drive/1GkPPsWYjC4aol6vgNVJ3KAwWJyqlOM5s?usp=sharing">цим посиланням</a> можна онлайн запустити та спробувати код з цього репозиторію
+За <a href="https://colab.research.google.com/drive/1GkPPsWYjC4aol6vgNVJ3KAwWJyqlOM5s?usp=sharing" target=”_blank”>цим посиланням</a> можна онлайн запустити та спробувати код з цього репозиторію
