@@ -24,7 +24,7 @@ class Table:
         "AVG": lambda column: sum(column) / len(column)
     }
 
-    def __init__(self, name: str, columns: list[list[str, bool]]):
+    def __init__(self, name: str, columns: list):
         self.name = name
         self.table = []
         self.columns = {}
@@ -34,7 +34,7 @@ class Table:
             if with_index:
                 self.indexes[col_name] = Index()
 
-    def insert(self, values: list[int]) -> list[list[int]]:
+    def insert(self, values: list) -> list:
         inserted_rows = []
         if len(values) == len(self.columns):
             row_i = len(self.table)
@@ -45,7 +45,7 @@ class Table:
             inserted_rows.append(values)
         return inserted_rows
 
-    def select(self, columns: list[str], condition: list[str], group_columns: list[str]) -> str:
+    def select(self, columns: list, condition: list, group_columns: list) -> str:
         if not columns:
             columns = self.columns
         columns_map = []
@@ -104,7 +104,7 @@ class Table:
         pr_table = AsciiTable(data)
         return pr_table.table
 
-    def delete(self, condition: list) -> list[list[int]]:
+    def delete(self, condition: list) -> list:
         deleted_rows, i = [], 0
         use_where = len(condition) == 3 and condition[1] in Table.OPERATORS.keys()
         while i < len(self.table):

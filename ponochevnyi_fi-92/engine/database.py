@@ -14,13 +14,13 @@ class DB:
                 return False
         return True
 
-    def check_columns(self, table_name: str, columns: list[str]) -> bool:
+    def check_columns(self, table_name: str, columns: list) -> bool:
         for column in columns:
             if column not in self.tables[table_name].columns:
                 return False
         return True
 
-    def check_columns_with_aggs_and_groups(self, table_name: str, columns: list[str], group_columns: list[str]) -> bool:
+    def check_columns_with_aggs_and_groups(self, table_name: str, columns: list, group_columns: list) -> bool:
         if group_columns and not columns:
             return False
         for column in columns:
@@ -52,7 +52,7 @@ class DB:
     def __init__(self):
         self.tables = {}
 
-    def create(self, table_name: str, columns: list[list[str, bool]]) -> str:
+    def create(self, table_name: str, columns: list) -> str:
         """
         CREATE command
 
@@ -65,7 +65,7 @@ class DB:
             return f"Table '{table_name}' has been created"
         return "invalid columns"
 
-    def insert(self, table_name: str, values: list[int]) -> str:
+    def insert(self, table_name: str, values: list) -> str:
         """
         INSERT command
 
@@ -82,7 +82,7 @@ class DB:
             return "invalid values to insert"
         return f"'{table_name}' table not found"
 
-    def select(self, table_name: str, columns: list[str], condition: list[str], group_columns: list[str]) -> str:
+    def select(self, table_name: str, columns: list, condition: list, group_columns: list) -> str:
         """
         SELECT command
 
