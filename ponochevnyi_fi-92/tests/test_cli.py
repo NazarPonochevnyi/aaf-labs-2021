@@ -21,8 +21,8 @@ def test_parse_create():
 
 
 def test_parse_insert():
-    assert CLI.parse_command("INSERT INTO measurements (1, 180, 75);") == ["INSERT", "measurements", [1, 180, 75]]
-    assert CLI.parse_command("INSERT measurements (2, 175, 72);.") == ["INSERT", "measurements", [2, 175, 72]]
+    assert CLI.parse_command("INSERT INTO measurements (1, 180, -75);") == ["INSERT", "measurements", [1, 180, -75]]
+    assert CLI.parse_command("INSERT measurements (0, +175, 72);.") == ["INSERT", "measurements", [0, 175, 72]]
 
 
 def test_parse_select():

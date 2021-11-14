@@ -151,7 +151,7 @@ class CLI:
                 for ch in ['(', ')', ',', ';', '.']:
                     if ch in parts[i]:
                         parts[i] = parts[i].replace(ch, '')
-                if parts[i].isnumeric():
+                if parts[i].lstrip("+-").isnumeric():
                     values.append(int(parts[i]))
                 i += 1
             tokens.append(values)
@@ -196,7 +196,7 @@ class CLI:
                     for ch in ['(', ')', ',', ';', '.']:
                         if ch in parts[i]:
                             parts[i] = parts[i].replace(ch, '')
-                    if parts[i].isnumeric():
+                    if parts[i].lstrip("+-").isnumeric():
                         condition.append(int(parts[i]))
                     else:
                         if parts[i].upper() in CLI.SPECIAL_WORDS:
@@ -235,7 +235,7 @@ class CLI:
                 for ch in ['(', ')', ',', ';', '.']:
                     if ch in parts[i]:
                         parts[i] = parts[i].replace(ch, '')
-                if parts[i].isnumeric():
+                if parts[i].lstrip("+-").isnumeric():
                     condition.append(int(parts[i]))
                 else:
                     if parts[i].upper() in CLI.SPECIAL_WORDS:
