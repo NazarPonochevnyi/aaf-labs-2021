@@ -163,9 +163,14 @@ class CLI:
                     for ch in [',', ';', '.']:
                         if ch in parts[i]:
                             parts[i] = parts[i].replace(ch, '')
-                    end_sw_index = parts[i].index('(')
-                    columns.append(parts[i][:end_sw_index].upper() + parts[i][end_sw_index:])
-                    i += 1
+                    end_i = i + 1
+                    full_part = ''.join(parts[i:end_i])
+                    while '(' not in full_part or ')' not in full_part:
+                        end_i += 1
+                        full_part = ''.join(parts[i:end_i])
+                    end_sw_index = full_part.index('(')
+                    columns.append(full_part[:end_sw_index].upper() + full_part[end_sw_index:])
+                    i = end_i
                 else:
                     for ch in ['(', ')', ',', ';', '.']:
                         if ch in parts[i]:
