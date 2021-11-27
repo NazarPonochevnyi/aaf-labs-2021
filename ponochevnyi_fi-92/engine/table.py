@@ -57,11 +57,24 @@ class Table:
             else:
                 columns_map.append([None, self.columns[column]])
         aggregation_lists = {}
-        use_where = len(condition) == 3 and condition[1] in Table.OPERATORS.keys()
+        rows_ids, use_where = range(len(self.table)), False
+        if len(condition) == 3 and condition[1] in Table.OPERATORS.keys():
+            use_where = True
+            op1, oper, op2 = condition
+            if op1 in self.columns.keys() != op2 in self.columns.keys():
+                if op1 in self.columns.keys() and op1 in self.indexes.keys():
+                    use_where = False
+                    rows_ids = self.indexes[op1].search(op2, oper)
+                elif op2 in self.columns.keys() and op2 in self.indexes.keys():
+                    use_where = False
+                    if '<' in oper: oper.replace('<', '>')
+                    if '>' in oper: oper.replace('>', '<')
+                    rows_ids = self.indexes[op2].search(op1, oper)
         data = [columns]
         groups_map = [self.columns[column] for column in group_columns]
         groups = {}
-        for row in self.table:
+        for row_id in rows_ids:
+            row = self.table[row_id]
             if use_where:
                 op1, oper, op2 = condition
                 if op1 in self.columns.keys():
@@ -108,16 +121,23 @@ class Table:
         deleted_rows, i = [], 0
         use_where = len(condition) == 3 and condition[1] in Table.OPERATORS.keys()
         while i < len(self.table):
+            row = self.table[i]
+            row_id = i + len(deleted_rows)
             if use_where:
-                row = self.table[i]
                 op1, oper, op2 = condition
                 if op1 in self.columns.keys():
                     op1 = row[self.columns[op1]]
                 if op2 in self.columns.keys():
                     op2 = row[self.columns[op2]]
                 if not Table.OPERATORS[oper](op1, op2):
+                    for col_name in self.indexes:
+                        col_id = self.columns[col_name]
+                        self.indexes[col_name].update(row[col_id], row_id, i)
                     i += 1
                     continue
+            for col_name in self.indexes:
+                col_id = self.columns[col_name]
+                self.indexes[col_name].remove(row[col_id], {row_id})
             deleted_rows.append(self.table.pop(i))
         return deleted_rows
 

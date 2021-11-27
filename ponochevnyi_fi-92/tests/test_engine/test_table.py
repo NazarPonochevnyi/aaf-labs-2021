@@ -18,6 +18,7 @@ def test_table_insert():
     assert table.table == [[1, 2]]
     assert table.insert([3, 4, 5]) == []
     assert table.table == [[1, 2]]
+    assert len(table.indexes["y"].container) == 1
 
 
 def test_table_select():
@@ -26,7 +27,7 @@ def test_table_select():
     table.insert([3, 4])
     table.insert([5, 6])
     assert table.select([], [], []) == "+---+---+\n| x | y |\n+---+---+\n| 1 | 2 |\n| 3 | 4 |\n| 5 | 6 |\n+---+---+"
-    table = Table("coordinates", [["x", False], ["y", True], ["color", False], ["type", False]])
+    table = Table("coordinates", [["x", True], ["y", False], ["color", False], ["type", False]])
     table.insert([1, 2, "red", "point"])
     table.insert([5, 4, "blue", "point"])
     table.insert([5, 6, "blue", "line"])
@@ -42,7 +43,7 @@ def test_table_select():
     assert table.select(["type", "color", "AVG(y)", "COUNT(x)"], [7, ">", "x"], ["type", "color"]) == "+-------+--------+--------+----------+\n| type  | color  | AVG(y) | COUNT(x) |\n+-------+--------+--------+----------+\n| line  | blue   | 6.0    | 1        |\n| point | blue   | 4.0    | 1        |\n| point | red    | 3.0    | 2        |\n| point | yellow | 9.0    | 1        |\n+-------+--------+--------+----------+"
 
 def test_table_delete():
-    table = Table("coordinates", [["x", False], ["y", True]])
+    table = Table("coordinates", [["x", True], ["y", False]])
     table.insert([1, 2])
     table.insert([3, 4])
     table.insert([5, 6])
@@ -52,3 +53,4 @@ def test_table_delete():
     assert table.table == [[3, 4], [5, 6]]
     assert table.delete([]) == [[3, 4], [5, 6]]
     assert table.table == []
+    assert len(table.indexes["x"].container) == 0
