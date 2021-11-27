@@ -34,7 +34,9 @@ class CLI:
         """
         self.db = DB()
         if params.get('run'):
-            print("Welcome to NazarSQL! (use 'EXIT;' command to quit)")
+            print("Welcome to NazarSQL!\n",
+                  " (use 'EXIT;' command to quit\n",
+                  " and 'SHOW [table] [column];' command to show the index)")
             input_text = ""
             try:
                 while True:
@@ -45,6 +47,15 @@ class CLI:
                                 command = command.strip()
                                 if command.upper() == "EXIT":
                                     raise CLI.GetOutOfLoop
+                                if "SHOW" in command.upper():
+                                    try:
+                                        _, table_name, column_name = command.split()
+                                        response = str(self.db.tables[table_name].indexes[column_name])
+                                    except Exception as e:
+                                        response = "Error: {}".format(str(e))
+                                    print(response)
+                                    input_text = ""
+                                    continue
                                 try:
                                     response = self.query(command)
                                 except IndexError:
