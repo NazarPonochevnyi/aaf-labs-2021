@@ -61,14 +61,16 @@ class Table:
         if len(condition) == 3 and condition[1] in Table.OPERATORS.keys():
             use_where = True
             op1, oper, op2 = condition
-            if op1 in self.columns.keys() != op2 in self.columns.keys():
-                if op1 in self.columns.keys() and op1 in self.indexes.keys():
+            if (op1 in self.columns.keys()) != (op2 in self.columns.keys()):
+                if (op1 in self.columns.keys()) and (op1 in self.indexes.keys()):
                     use_where = False
                     rows_ids = self.indexes[op1].search(op2, oper)
-                elif op2 in self.columns.keys() and op2 in self.indexes.keys():
+                elif (op2 in self.columns.keys()) and (op2 in self.indexes.keys()):
                     use_where = False
-                    if '<' in oper: oper.replace('<', '>')
-                    if '>' in oper: oper.replace('>', '<')
+                    if '<' in oper:
+                        oper = oper.replace('<', '>')
+                    elif '>' in oper:
+                        oper = oper.replace('>', '<')
                     rows_ids = self.indexes[op2].search(op1, oper)
         data = [columns]
         groups_map = [self.columns[column] for column in group_columns]
