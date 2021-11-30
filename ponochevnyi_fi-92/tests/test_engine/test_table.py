@@ -66,5 +66,16 @@ def test_table_delete():
 
 
 def test_table_performance():
-    # TODO: test that spent time with index smaller then without it on large scale
-    pass
+    from time import perf_counter
+    from random import randint
+    table = Table("test", [["x", True], ["y", False]])
+    for _ in range(100000):
+        value = randint(-1000, 1000)
+        table.insert([value, value])
+    start_time = perf_counter()
+    table.select([], ["y", ">", 0], [])
+    no_index_time = perf_counter() - start_time
+    start_time = perf_counter()
+    table.select([], ["x", ">", 0], [])
+    index_time = perf_counter() - start_time
+    assert round(index_time, 2) <= round(no_index_time, 2)
