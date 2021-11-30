@@ -8,7 +8,7 @@ from engine.table import Table
 def test_table_create():
     table = Table("coordinates", [["x", False], ["y", True]])
     assert table.name == "coordinates"
-    assert table.table == []
+    assert table.table == {}
     assert table.columns == {"x": 0, "y": 1}
     assert len(table.indexes) == 1
 
@@ -16,9 +16,9 @@ def test_table_create():
 def test_table_insert():
     table = Table("coordinates", [["x", False], ["y", True]])
     assert table.insert([1, 2]) == [[1, 2]]
-    assert table.table == [[1, 2]]
+    assert table.table == {0: [1, 2]}
     assert table.insert([3, 4, 5]) == []
-    assert table.table == [[1, 2]]
+    assert table.table == {0: [1, 2]}
     assert len(table.indexes["y"].container) == 1
 
 
@@ -57,11 +57,11 @@ def test_table_delete():
     table.insert([3, 4])
     table.insert([5, 6])
     assert table.delete(["x", "=", 1]) == [[1, 2]]
-    assert table.table == [[3, 4], [5, 6]]
+    assert table.table == {1: [3, 4], 2: [5, 6]}
     assert table.delete(["x", "=", 1]) == []
-    assert table.table == [[3, 4], [5, 6]]
+    assert table.table == {1: [3, 4], 2: [5, 6]}
     assert table.delete([]) == [[3, 4], [5, 6]]
-    assert table.table == []
+    assert table.table == {}
     assert len(table.indexes["x"].container) == 0
 
 

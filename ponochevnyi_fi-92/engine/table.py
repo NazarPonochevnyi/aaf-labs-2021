@@ -27,7 +27,8 @@ class Table:
 
     def __init__(self, name: str, columns: list):
         self.name = name
-        self.table = []
+        self.table = {}
+        self.row_id = 0
         self.columns = {}
         self.indexes = {}
         for i, (col_name, with_index) in enumerate(columns):
@@ -38,11 +39,12 @@ class Table:
     def insert(self, values: list) -> list:
         inserted_rows = []
         if len(values) == len(self.columns):
-            row_i = len(self.table)
+            row_i = self.row_id
             for col_name in self.indexes:
                 i = self.columns[col_name]
                 self.indexes[col_name].insert(values[i], row_i)
-            self.table.append(values)
+            self.table[row_i] = values
+            self.row_id += 1
             inserted_rows.append(values)
         return inserted_rows
 
@@ -58,7 +60,7 @@ class Table:
             else:
                 columns_map.append([None, self.columns[column]])
         aggregation_lists = {}
-        rows_ids, use_where = set(range(len(self.table))), False
+        rows_ids, use_where = set(self.table.keys()), False
         if len(condition) == 3 and condition[1] in Table.OPERATORS.keys():
             use_where = True
             op1, oper, op2 = condition
@@ -154,11 +156,23 @@ class Table:
         return pr_table.table
 
     def delete(self, condition: list) -> list:
-        deleted_rows, i = [], 0
-        use_where = len(condition) == 3 and condition[1] in Table.OPERATORS.keys()
-        while i < len(self.table):
-            row = self.table[i]
-            row_id = i + len(deleted_rows)
+        deleted_rows, rows_ids, use_where = [], set(self.table.keys()), False
+        if len(condition) == 3 and condition[1] in Table.OPERATORS.keys():
+            use_where = True
+            op1, oper, op2 = condition
+            if (op1 in self.columns.keys()) != (op2 in self.columns.keys()):
+                if (op1 in self.columns.keys()) and (op1 in self.indexes.keys()):
+                    use_where = False
+                    rows_ids = self.indexes[op1].search(op2, oper)
+                elif (op2 in self.columns.keys()) and (op2 in self.indexes.keys()):
+                    use_where = False
+                    if '<' in oper:
+                        oper = oper.replace('<', '>')
+                    elif '>' in oper:
+                        oper = oper.replace('>', '<')
+                    rows_ids = self.indexes[op2].search(op1, oper)
+        for row_id in rows_ids.copy():
+            row = self.table[row_id]
             if use_where:
                 op1, oper, op2 = condition
                 if op1 in self.columns.keys():
@@ -166,15 +180,11 @@ class Table:
                 if op2 in self.columns.keys():
                     op2 = row[self.columns[op2]]
                 if not Table.OPERATORS[oper](op1, op2):
-                    for col_name in self.indexes:
-                        col_id = self.columns[col_name]
-                        self.indexes[col_name].update(row[col_id], row_id, i)
-                    i += 1
                     continue
             for col_name in self.indexes:
                 col_id = self.columns[col_name]
                 self.indexes[col_name].remove(row[col_id], {row_id})
-            deleted_rows.append(self.table.pop(i))
+            deleted_rows.append(self.table.pop(row_id))
         return deleted_rows
 
 
