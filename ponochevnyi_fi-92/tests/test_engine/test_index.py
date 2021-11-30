@@ -54,8 +54,9 @@ def test_index_search():
     assert index.search(-1) == set()
     assert index.search(0, "=") == {5, 8}
     assert index.search(-1, "!=") == {i for i in range(11)}
+    assert -1 not in index.container
     assert index.search(1, "!=") == {i for i in range(2, 11)}
-    print("\n", index, "\n")
+    assert 1 in index.container
     assert index.search(-1, "<") == {9, 10, 3}
     assert index.search(-7, "<") == {9, 10}
     assert index.search(-1, "<=") == {9, 10, 3}
