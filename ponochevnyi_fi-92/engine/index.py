@@ -22,7 +22,8 @@ class Index:
 
     def remove(self, value: int, pointers: set = None) -> set:
         if pointers is None:
-            return self.container.pop(value)
+            return self.container.pop(value, set())
+        pointers &= self.container[value]
         self.container[value] -= pointers
         if not self.container[value]:
             del self.container[value]
@@ -30,20 +31,29 @@ class Index:
 
     def search(self, value: int, operator: str = '=') -> set:
         if operator == '=':
-            return self.container[value]
+            return self.container.get(value, set())
         if operator == '!=':
-            temp = self.container.pop(value)
+            temp = self.container.pop(value, set())
             response = set.union(*self.container.values())
-            self.container[value] = temp
+            if temp:
+                self.container[value] = temp
             return response
-        i = self.container.index(value)
+        if value in self.container:
+            i = self.container.index(value)
+            if operator == '<':
+                return set.union(*self.container.values()[:i])
+            if operator == '<=':
+                return set.union(*self.container.values()[:i + 1])
+            if operator == '>':
+                return set.union(*self.container.values()[i + 1:])
+            if operator == '>=':
+                return set.union(*self.container.values()[i:])
+            raise Exception("operator not found")
+        i = self.container.bisect(value)
+        operator = operator.replace('=', '')
         if operator == '<':
             return set.union(*self.container.values()[:i])
-        if operator == '<=':
-            return set.union(*self.container.values()[:i + 1])
         if operator == '>':
-            return set.union(*self.container.values()[i + 1:])
-        if operator == '>=':
             return set.union(*self.container.values()[i:])
         raise Exception("operator not found")
 
