@@ -3,8 +3,9 @@ Table algorithms
 
 """
 
-from engine.index import Index
 from terminaltables import AsciiTable
+from engine.index import Index
+from itertools import product
 import operator
 
 
@@ -57,7 +58,7 @@ class Table:
             else:
                 columns_map.append([None, self.columns[column]])
         aggregation_lists = {}
-        rows_ids, use_where = range(len(self.table)), False
+        rows_ids, use_where = set(range(len(self.table))), False
         if len(condition) == 3 and condition[1] in Table.OPERATORS.keys():
             use_where = True
             op1, oper, op2 = condition
@@ -73,38 +74,71 @@ class Table:
                         oper = oper.replace('>', '<')
                     rows_ids = self.indexes[op2].search(op1, oper)
         data = [columns]
-        groups_map = [self.columns[column] for column in group_columns]
-        groups = {}
-        for row_id in rows_ids:
-            row = self.table[row_id]
-            if use_where:
-                op1, oper, op2 = condition
-                if op1 in self.columns.keys():
-                    op1 = row[self.columns[op1]]
-                if op2 in self.columns.keys():
-                    op2 = row[self.columns[op2]]
-                if not Table.OPERATORS[oper](op1, op2):
-                    continue
-            response_row = []
-            group_key = tuple(row[col_id] for col_id in groups_map)
-            for i, (agg_func, col_id) in enumerate(columns_map):
-                if agg_func is not None:
-                    if group_key:
-                        aggregation_lists.setdefault(group_key, {}).setdefault(i, []).append(row[col_id])
+        use_group_index = all((g_column in self.indexes.keys() for g_column in group_columns))
+        if group_columns and use_group_index:
+            list_keys = (self.indexes[g_column].container.keys() for g_column in group_columns)
+            group_keys = (group_key for group_key in product(*list_keys))
+            groups = {}
+            for group_key in group_keys:
+                for i, key in enumerate(group_key):
+                    if group_key not in groups.keys():
+                        groups[group_key] = self.indexes[group_columns[i]].search(key).copy()
                     else:
-                        aggregation_lists.setdefault(i, []).append(row[col_id])
-                response_row.append(row[col_id])
-            if group_key:
-                groups[group_key] = response_row
-            else:
-                data.append(response_row)
+                        groups[group_key] &= self.indexes[group_columns[i]].search(key)
+                if not use_where:
+                    groups[group_key] &= rows_ids
+                if groups[group_key]:
+                    for row_id in groups[group_key].copy():
+                        row = self.table[row_id]
+                        if use_where:
+                            op1, oper, op2 = condition
+                            if op1 in self.columns.keys():
+                                op1 = row[self.columns[op1]]
+                            if op2 in self.columns.keys():
+                                op2 = row[self.columns[op2]]
+                            if not Table.OPERATORS[oper](op1, op2):
+                                continue
+                        response_row = []
+                        for i, (agg_func, col_id) in enumerate(columns_map):
+                            if agg_func is not None:
+                                aggregation_lists.setdefault(group_key, {}).setdefault(i, []).append(row[col_id])
+                            response_row.append(row[col_id])
+                        groups[group_key] = response_row
+                else:
+                    del groups[group_key]
+        else:
+            groups = {}
+            groups_map = [self.columns[g_column] for g_column in group_columns]
+            for row_id in rows_ids:
+                row = self.table[row_id]
+                if use_where:
+                    op1, oper, op2 = condition
+                    if op1 in self.columns.keys():
+                        op1 = row[self.columns[op1]]
+                    if op2 in self.columns.keys():
+                        op2 = row[self.columns[op2]]
+                    if not Table.OPERATORS[oper](op1, op2):
+                        continue
+                response_row = []
+                group_key = tuple(row[col_id] for col_id in groups_map)
+                for i, (agg_func, col_id) in enumerate(columns_map):
+                    if agg_func is not None:
+                        if group_key:
+                            aggregation_lists.setdefault(group_key, {}).setdefault(i, []).append(row[col_id])
+                        else:
+                            aggregation_lists.setdefault(i, []).append(row[col_id])
+                    response_row.append(row[col_id])
+                if group_key:
+                    groups[group_key] = response_row
+                else:
+                    data.append(response_row)
         if group_columns:
             for group_key in groups:
                 for i, (agg_func, col_id) in enumerate(columns_map):
                     if agg_func is not None:
                         groups[group_key][i] = agg_func(aggregation_lists[group_key][i])
             data += list(groups.values())
-            data[1:] = sorted(data[1:], key=lambda row: tuple(row[columns.index(column)] for column in group_columns))
+            data[1:] = sorted(data[1:], key=lambda row: tuple(row[columns.index(g_column)] for g_column in group_columns if g_column in columns))
         else:
             if aggregation_lists:
                 for i, (agg_func, col_id) in enumerate(columns_map):
