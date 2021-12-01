@@ -113,7 +113,7 @@ class CLI:
                     oper = CLI.LIST_OPERATORS[check_list.index(True)]
                     insert_part = part.split(oper)
                     insert_part.insert(1, oper)
-                    parts = parts[:i] + insert_part + parts[i + 1:]
+                    parts = parts[:i] + list(filter(lambda x: x != '', insert_part)) + parts[i + 1:]
                     break
         tokens, i = [], 0
         while i < len(parts) and parts[i].upper() not in CLI.COMMANDS:
