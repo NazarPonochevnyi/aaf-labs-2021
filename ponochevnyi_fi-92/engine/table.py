@@ -77,16 +77,11 @@ class Table:
                     rows_ids = self.indexes[op2].search(op1, oper)
         data = [columns]
         use_group_index = all((g_column in self.indexes.keys() for g_column in group_columns))
-        if group_columns and use_group_index:
-            list_keys = (self.indexes[g_column].container.keys() for g_column in group_columns)
-            group_keys = (group_key for group_key in product(*list_keys))
-            groups = {}
-            for group_key in group_keys:
-                for i, key in enumerate(group_key):
-                    if group_key not in groups.keys():
-                        groups[group_key] = self.indexes[group_columns[i]].search(key).copy()
-                    else:
-                        groups[group_key] &= self.indexes[group_columns[i]].search(key)
+        if len(group_columns) == 1 and use_group_index:
+            g_column, groups = group_columns[0], {}
+            for key, value in self.indexes[g_column].container.items():
+                group_key = (key,)
+                groups[group_key] = value.copy()
                 if not use_where:
                     groups[group_key] &= rows_ids
                 if groups[group_key]:
